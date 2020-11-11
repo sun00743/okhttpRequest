@@ -1,31 +1,17 @@
 package com.mika.request
 
-import com.mika.request.listener.ResponseListener
+import com.mika.request.request.Requester
+import kotlinx.coroutines.*
 import okhttp3.*
 import java.io.IOException
+import java.lang.Runnable
 
 /**
  * Created by mika on 2018/5/28.
  */
-class Connector private constructor() {
+object Connector {
 
-    companion object {
-
-        const val REQUEST_NULL_TAG = Byte.MIN_VALUE
-
-        @JvmStatic
-        val instance: Connector by lazy { Connector() }
-
-        /**
-         * init in application
-         */
-        @JvmStatic
-        fun init(okHttpClient: OkHttpClient?) {
-            instance.mDefaultClient = okHttpClient ?: OkHttpClient()
-            instance.mPlatform = Platform.get()
-        }
-
-    }
+    const val REQUEST_NULL_TAG = Byte.MIN_VALUE
 
     private lateinit var mPlatform: Platform
 
@@ -38,6 +24,12 @@ class Connector private constructor() {
      * 公共的headers
      */
     private lateinit var mCommonHeaders: HashMap<String, String>
+
+    @JvmStatic
+    fun init(okHttpClient: OkHttpClient?) {
+        mDefaultClient = okHttpClient ?: OkHttpClient()
+        mPlatform = Platform.get()
+    }
 
     //-----------------------------------------body------------------------------------------------
 
@@ -62,70 +54,25 @@ class Connector private constructor() {
         return mDefaultClient.newBuilder()
     }
 
-    fun <T> execute(client: OkHttpClient?, request: Request, tag: Any, responseListener: ResponseListener<T>) {
-        //callBack
-        val okHttpCallback = object : Callback {
-
-            override fun onFailure(call: Call, e: IOException?) {
-                postFailureResult(call, e, responseListener, tag)
-            }
-
-            override fun onResponse(call: Call, response: Response) {
+    fun <T> execute(client: OkHttpClient?, requester: Requester<T>, coroutineScope: CoroutineScope,
+                            block: (result: Result<out T>) -> Unit) {
+        val request = requester.buildOkHttpRequest()
+        coroutineScope.launch {
+            val withContext = withContext(Dispatchers.IO) {
                 try {
-                    if (call.isCanceled) {
-                        postCancelResult(call, responseListener, tag)
+                    val response = (client ?: mDefaultClient).newCall(request).execute()
+                    if (response.isSuccessful) {
+                        Result.Success(requester.parseNetworkResponse(response))
                     } else {
-                        if (responseListener.validateResponse(response, tag)) {
-                            val result = responseListener.parseNetworkResponse(response, tag)
-
-                            //TODO check parsed response
-                            //check...
-                            if (result == null) {
-//                                postFailureResult()
-                                return
-                            }
-
-                            postSuccessResult(result, responseListener, tag)
-                        } else {
-                            val fMsg = response.message() + " response failure, code: " + response.code() +
-                                    " body: " + response.body().toString()
-                            postFailureResult(call, IOException(fMsg), responseListener, tag)
-                        }
+                        Result.Error(Exception("http response error, code: ${response.code}, msg: ${response.message}"))
                     }
                 } catch (e: Exception) {
-                    postFailureResult(call, e, responseListener, tag)
-                } finally {
-                    response.body()?.close()
+                    Result.Error(e)
                 }
             }
-
+            block.invoke(withContext)
         }
-        //start call
-        responseListener.onStarted(request, tag)
-        (client ?: mDefaultClient).newCall(request).enqueue(okHttpCallback)
     }
 
-    private fun <T> postSuccessResult(result: T, responseListener: ResponseListener<in T>, requestTag: Any) {
-        mPlatform.execute(Runnable {
-            responseListener.onResponse(result, requestTag)
-        })
-    }
-
-    private fun postFailureResult(call: Call, e: Exception?, listener: ResponseListener<*>, tag: Any) {
-        mPlatform.execute(Runnable {
-            listener.onFailure(call, e, tag)
-        })
-    }
-
-    /**
-     * post request cancel result
-     */
-    private fun postCancelResult(call: Call, listener: ResponseListener<*>, tag: Any) {
-        mPlatform.execute(Runnable {
-            listener.onCanceled(tag)
-            listener.onFailure(call, IOException("http Canceled"), tag)
-            listener.onFinished(tag)
-        })
-    }
 
 }

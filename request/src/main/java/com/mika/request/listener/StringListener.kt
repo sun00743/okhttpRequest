@@ -9,7 +9,7 @@ import java.io.IOException
 abstract class StringListener : ResponseListener<String>() {
 
     override fun parseNetworkResponse(response: Response, tag: Any): String {
-        val stringResult = response.body()?.string() ?: throw IOException("response body is null")
+        val stringResult = response.body?.string() ?: throw IOException("response body is null")
         //can validate result here
         //validateResponse(stringResult)
         return stringResult

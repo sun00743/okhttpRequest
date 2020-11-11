@@ -1,16 +1,19 @@
 package com.mika.request.request
 
 import com.mika.request.Connector
+import com.mika.request.Result
 import com.mika.request.listener.ResponseListener
+import kotlinx.coroutines.CoroutineScope
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.Response
 import java.util.concurrent.TimeUnit
 
 
 /**
  * Created by mika on 2018/6/3.
  */
-abstract class Requester(protected val url: String, protected val listener: ResponseListener<*>?) {
+abstract class Requester<T>(protected val url: String, protected val listener: ResponseListener<*>?) {
 
 
     private lateinit var mClientBuilder: OkHttpClient.Builder
@@ -32,7 +35,7 @@ abstract class Requester(protected val url: String, protected val listener: Resp
         requestBuilder.url(url)
     }
 
-    fun execute() {
+    fun <U> execute(coroutineScope: CoroutineScope, block: (result: Result<out T>) -> Unit) {
 
 //        val body = RequestBody.create(JSON, json)
 //        val request = Request.Builder()
@@ -40,13 +43,16 @@ abstract class Requester(protected val url: String, protected val listener: Resp
 //                .post(body)
 //                .build()
 
-        //TODO buildRequestBody wrapRequestBody
-        //TODO onBefore
+        //todo buildRequestBody wrapRequestBody
+        //todo onBefore
         val client: OkHttpClient? = if (useDefaultClient) null else mClientBuilder.build()
-        val requestTag = tag ?: Connector.REQUEST_NULL_TAG
-        val responseListener = listener ?: ResponseListener.responseListener
-        Connector.instance.execute(client, buildOkHttpRequest(), requestTag, responseListener)
+        Connector.execute(client, this, coroutineScope, block)
     }
+
+    /**
+     * 解析Response
+     */
+    abstract fun parseNetworkResponse(response: Response): T
 
     /**
      * requestBuilder build okHttp request
@@ -68,7 +74,7 @@ abstract class Requester(protected val url: String, protected val listener: Resp
     protected fun getClientBuilder(): OkHttpClient.Builder {
         if (useDefaultClient) {
             useDefaultClient = false
-            mClientBuilder = Connector.instance.newBuilder()
+            mClientBuilder = Connector.newBuilder()
         }
         return mClientBuilder
     }
@@ -76,4 +82,5 @@ abstract class Requester(protected val url: String, protected val listener: Resp
     protected fun isParamsMapInit(): Boolean {
         return this::paramsMap.isInitialized
     }
+
 }

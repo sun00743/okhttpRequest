@@ -4,6 +4,10 @@ import com.mika.request.Connector
 import com.mika.request.RequestBodySink
 import com.mika.request.listener.ResponseListener
 import okhttp3.*
+import okhttp3.Headers.Companion.headersOf
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 import java.net.URLConnection
 
@@ -11,7 +15,7 @@ import java.net.URLConnection
  * Created by mika on 2018/6/24.
  * a request post string from only
  */
-class PostFromRequester(url: String, listener: ResponseListener<*>?) : Requester(url, listener) {
+abstract class PostFromRequester<T>(url: String, listener: ResponseListener<*>?) : Requester<T>(url, listener) {
 
     private lateinit var files: MutableMap<String, File>
 
@@ -49,15 +53,12 @@ class PostFromRequester(url: String, listener: ResponseListener<*>?) : Requester
 
         fun createRequestBody(): RequestBody {
 
-            return if (isFilesMapInitialized()) {
-                when {
-                    isParamsMapInit() -> buildMultiBody()
-                    files.size > 1 -> buildMultiFileBody()
-                    files.size == 1 -> buildFileBody()
-                    else -> buildStringBody()
-                }
-            } else {
-                buildStringBody()
+            return when {
+                !isFilesMapInitialized() -> buildStringBody()
+                isParamsMapInit() -> buildMultiBody()
+                files.size > 1 -> buildMultiFileBody()
+                files.size == 1 -> buildFileBody()
+                else -> buildStringBody()
             }
 
 /*
@@ -96,7 +97,8 @@ class PostFromRequester(url: String, listener: ResponseListener<*>?) : Requester
          * return file body
          */
         private fun buildFileBody(): RequestBody {
-            val requestBody = RequestBody.create(MediaType.parse("application/octet-stream"), files.values.single())
+            val file = files.values.single()
+            val requestBody = file.asRequestBody("application/octet-stream".toMediaTypeOrNull())
             return wrapBody(requestBody)
         }
 
@@ -116,9 +118,9 @@ class PostFromRequester(url: String, listener: ResponseListener<*>?) : Requester
         private fun buildMultiBody(): RequestBody {
             val builder = MultipartBody.Builder()
             //add string part
-            paramsMap.forEach {
-                builder.addPart(Headers.of("Content-Disposition", "form-data; name=\"" + it.key + "\""),
-                        RequestBody.create(null, it.value))
+            paramsMap.forEach { item ->
+                builder.addPart(headersOf("Content-Disposition", "form-data; name=\"" + item.key + "\""),
+                        item.value.toRequestBody(null))
             }
 
             addFilesDataPart(builder)
@@ -129,11 +131,12 @@ class PostFromRequester(url: String, listener: ResponseListener<*>?) : Requester
          * add file from data part
          */
         private fun addFilesDataPart(builder: MultipartBody.Builder) {
-            files.forEach {
-                val contentType = URLConnection.getFileNameMap().getContentTypeFor(it.value.name)
+            files.forEach { item ->
+                val file = item.value
+                val contentType = URLConnection.getFileNameMap().getContentTypeFor(file.name)
                         ?: "application/octet-stream"
-                val body = RequestBody.create(MediaType.parse(contentType), it.value)
-                builder.addFormDataPart(it.key, it.value.name, body)
+                val body = file.asRequestBody(contentType.toMediaTypeOrNull())
+                builder.addFormDataPart(item.key, file.name, body)
             }
         }
 
@@ -141,9 +144,12 @@ class PostFromRequester(url: String, listener: ResponseListener<*>?) : Requester
             return RequestBodySink(requestBody, object : RequestBodySink.OnProgressListener {
 
                 override fun onRequestProgress(bytesWritten: Long, contentLength: Long) {
-                    Connector.instance.getPlatform().defaultCallbackExecutor().execute {
-                        listener?.inProgress((bytesWritten / contentLength).toFloat(), contentLength,
-                                tag ?: Connector.REQUEST_NULL_TAG)
+                    Connector.getPlatform().defaultCallbackExecutor().execute {
+                        listener?.inProgress(
+                                (bytesWritten / contentLength).toFloat(),
+                                contentLength,
+                                tag ?: Connector.REQUEST_NULL_TAG
+                        )
                     }
                 }
 

@@ -4,12 +4,16 @@ import android.Manifest
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.mika.request.listener.StringListener
 import com.mika.request.request.GetRequester
+import com.mika.request.request.GetStringRequester
+import com.mika.request.request.PostForJsonRequest
 import com.mika.request.request.PostFromRequester
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.MainScope
 import okhttp3.Call
 import java.io.File
 
@@ -24,27 +28,15 @@ class MainActivity : AppCompatActivity() {
         }
 
         button_request_get.setOnClickListener {
-            val requester = GetRequester("https://cn.bing.com/search", object : StringListener() {
-
-                override fun onFailure(call: okhttp3.Call, e: Exception?, tag: Any) {
-                    Log.d("onFailure", e?.message)
-                }
-
-                override fun onResponse(response: String, tag: Any) {
-                    Log.d("onResponse", response)
-                }
-
-            })
-            requester.addParam("q", "android")
-            requester.execute()
+            requestBing()
         }
 
         button_request_post.setOnClickListener {
-
             val externalPath = Environment.getExternalStorageDirectory().absolutePath
             val file = File(externalPath, "v1.mp4")
             if (file.exists()) {
-                val postFromRequester = PostFromRequester("https://cn.bing.com", object : StringListener() {
+/*
+                val postFromRequester = PostForJsonRequest("https://cn.bing.com", object : StringListener() {
 
                     override fun inProgress(progress: Float, total: Long, tag: Any) {
                         Log.d("mika inProgress", "progress: " + progress + "total: " + total)
@@ -61,8 +53,25 @@ class MainActivity : AppCompatActivity() {
                 })
                 postFromRequester.addFile(file)
                 postFromRequester.execute()
+*/
             }
 
         }
+    }
+
+    fun requestBing() {
+        val url = "https://cn.bing.com/search"
+        GetStringRequester(url)
+                .addParam("q", "android")
+                .execute<String>(lifecycleScope) { result: Result<out String> ->
+                    when (result) {
+                        is Result.Success -> {
+                            text_result.text = result.value
+                        }
+                        is Result.Error -> {
+                            text_result.text = result.exception.message
+                        }
+                    }
+                }
     }
 }

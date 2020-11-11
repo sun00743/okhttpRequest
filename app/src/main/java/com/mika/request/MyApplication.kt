@@ -18,13 +18,19 @@ class MyApplication: Application() {
     override fun onCreate() {
         super.onCreate()
 
+        initOkHttpClient()
+    }
+
+
+    private fun initOkHttpClient() {
         val okHttpClient = OkHttpClient.Builder()
                 //                .addInterceptor(new LoggerInterceptor("TAG"))
-                .connectTimeout(30000L, TimeUnit.MILLISECONDS)    //30s time out
-                .readTimeout(30000L, TimeUnit.MILLISECONDS)       //30s read out
+                .connectTimeout(15000L, TimeUnit.MILLISECONDS)    //15s time out
+                .readTimeout(15000L, TimeUnit.MILLISECONDS)       //15s read out
                 .retryOnConnectionFailure(false) //错误重连
                 .addInterceptor(HttpLoggingInterceptor()
-                        .setLevel(HttpLoggingInterceptor.Level.BODY))
+                        .setLevel(HttpLoggingInterceptor.Level.BODY)
+                )
                 //其他配置
                 //                .authenticator()
                 //                .cookieJar()
@@ -33,4 +39,5 @@ class MyApplication: Application() {
         Connector.init(okHttpClient)
 //        Connector.instance.setCommonHeaders();
     }
+
 }

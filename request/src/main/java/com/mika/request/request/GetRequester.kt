@@ -7,7 +7,7 @@ import okhttp3.Request
 /**
  * Created by mika on 2018/6/9.
  */
-class GetRequester(url: String, listener: ResponseListener<*>?) : Requester(url, listener) {
+abstract class GetRequester<T>(url: String, listener: ResponseListener<*>?) : Requester<T>(url, listener) {
 
     override fun buildOkHttpRequest(): Request {
         if (isParamsMapInit()) {
@@ -21,11 +21,12 @@ class GetRequester(url: String, listener: ResponseListener<*>?) : Requester(url,
         return requestBuilder.build()
     }
 
-    fun addParam(key: String, value: String) {
+    fun addParam(key: String, value: String): GetRequester<T> {
         if (!isParamsMapInit()) {
             paramsMap = linkedMapOf(key to value)
         }
         paramsMap[key] = value
+        return this
     }
 
     fun addParamMap(paramMap: HashMap<String, String>) {
