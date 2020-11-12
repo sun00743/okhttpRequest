@@ -1,4 +1,4 @@
-package com.mika.request
+package com.mika.demo
 
 import android.content.Intent
 import android.os.Bundle
@@ -9,7 +9,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
-import com.mika.request.dummy.DummyContent
+import com.mika.demo.dummy.DummyContent
 import kotlinx.android.synthetic.main.activity_item_list.*
 import kotlinx.android.synthetic.main.item_list.*
 import kotlinx.android.synthetic.main.item_list_content.view.*

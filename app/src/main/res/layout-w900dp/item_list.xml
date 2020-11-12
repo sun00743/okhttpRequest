@@ -27,7 +27,7 @@
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
         app:layoutManager="LinearLayoutManager"
-        tools:context="com.mika.request.ItemListActivity"
+        tools:context="com.mika.demo.ItemListActivity"
         tools:listitem="@layout/item_list_content" />
 
     <FrameLayout

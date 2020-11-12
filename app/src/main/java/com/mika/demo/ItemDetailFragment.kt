@@ -1,11 +1,11 @@
-package com.mika.request
+package com.mika.demo
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.mika.request.dummy.DummyContent
+import com.mika.demo.dummy.DummyContent
 import kotlinx.android.synthetic.main.activity_item_detail.*
 import kotlinx.android.synthetic.main.item_detail.view.*
 

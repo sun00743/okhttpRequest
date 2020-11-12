@@ -1,7 +1,9 @@
-package com.mika.request
+package com.mika.demo
 
 import android.app.Application
 import android.content.Context
+import androidx.multidex.MultiDex
+import com.mika.requester.Connector
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import java.util.concurrent.TimeUnit
@@ -9,10 +11,13 @@ import java.util.concurrent.TimeUnit
 /**
  * Created by mika on 2018/7/22.
  */
-class MyApplication: Application() {
+class MyApplication : Application() {
 
     override fun attachBaseContext(base: Context?) {
         super.attachBaseContext(base)
+
+        //MultiDex加载
+        MultiDex.install(this)
     }
 
     override fun onCreate() {

@@ -1,7 +1,7 @@
-package com.mika.request.request
+package com.mika.requester.request
 
 import com.google.gson.GsonBuilder
-import com.mika.request.listener.ResponseListener
+import com.mika.requester.listener.ResponseListener
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody

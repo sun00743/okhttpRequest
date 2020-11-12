@@ -1,4 +1,4 @@
-package com.mika.request
+package com.mika.requester
 
 import android.os.Build
 import android.os.Handler
@@ -47,7 +47,7 @@ open class Platform {
 
             private val handler = Handler(Looper.getMainLooper())
 
-            override fun execute(command: Runnable?) {
+            override fun execute(command: Runnable) {
                 handler.post(command)
             }
         }

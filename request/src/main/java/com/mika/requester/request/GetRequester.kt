@@ -1,7 +1,7 @@
-package com.mika.request.request
+package com.mika.requester.request
 
 import android.net.Uri
-import com.mika.request.listener.ResponseListener
+import com.mika.requester.listener.ResponseListener
 import okhttp3.Request
 
 /**

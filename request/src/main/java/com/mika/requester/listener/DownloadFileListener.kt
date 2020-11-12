@@ -1,9 +1,7 @@
-package com.mika.request.listener
+package com.mika.requester.listener
 
-import okhttp3.Call
 import okhttp3.Response
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
 
 /**

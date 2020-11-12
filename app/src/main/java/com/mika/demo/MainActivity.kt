@@ -1,20 +1,14 @@
-package com.mika.request
+package com.mika.demo
 
 import android.Manifest
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.mika.request.listener.StringListener
-import com.mika.request.request.GetRequester
-import com.mika.request.request.GetStringRequester
-import com.mika.request.request.PostForJsonRequest
-import com.mika.request.request.PostFromRequester
+import com.mika.requester.Result
+import com.mika.requester.request.GetStringRequester
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.MainScope
-import okhttp3.Call
 import java.io.File
 
 class MainActivity : AppCompatActivity() {
@@ -65,10 +59,10 @@ class MainActivity : AppCompatActivity() {
                 .addParam("q", "android")
                 .execute<String>(lifecycleScope) { result: Result<out String> ->
                     when (result) {
-                        is Result.Success -> {
+                        is  Result.Success-> {
                             text_result.text = result.value
                         }
-                        is Result.Error -> {
+                        is  Result.Error-> {
                             text_result.text = result.exception.message
                         }
                     }

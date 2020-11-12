@@ -1,8 +1,8 @@
-package com.mika.request.request
+package com.mika.requester.request
 
-import com.mika.request.Connector
-import com.mika.request.RequestBodySink
-import com.mika.request.listener.ResponseListener
+import com.mika.requester.Connector
+import com.mika.requester.RequestBodySink
+import com.mika.requester.listener.ResponseListener
 import okhttp3.*
 import okhttp3.Headers.Companion.headersOf
 import okhttp3.MediaType.Companion.toMediaTypeOrNull

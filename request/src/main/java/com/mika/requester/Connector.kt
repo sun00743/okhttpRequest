@@ -1,10 +1,8 @@
-package com.mika.request
+package com.mika.requester
 
-import com.mika.request.request.Requester
+import com.mika.requester.request.Requester
 import kotlinx.coroutines.*
 import okhttp3.*
-import java.io.IOException
-import java.lang.Runnable
 
 /**
  * Created by mika on 2018/5/28.
@@ -55,7 +53,7 @@ object Connector {
     }
 
     fun <T> execute(client: OkHttpClient?, requester: Requester<T>, coroutineScope: CoroutineScope,
-                            block: (result: Result<out T>) -> Unit) {
+                    block: (result: Result<out T>) -> Unit) {
         val request = requester.buildOkHttpRequest()
         coroutineScope.launch {
             val withContext = withContext(Dispatchers.IO) {

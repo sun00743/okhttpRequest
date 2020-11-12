@@ -1,8 +1,8 @@
-package com.mika.request.request
+package com.mika.requester.request
 
-import com.mika.request.Connector
-import com.mika.request.Result
-import com.mika.request.listener.ResponseListener
+import com.mika.requester.Connector
+import com.mika.requester.Result
+import com.mika.requester.listener.ResponseListener
 import kotlinx.coroutines.CoroutineScope
 import okhttp3.OkHttpClient
 import okhttp3.Request

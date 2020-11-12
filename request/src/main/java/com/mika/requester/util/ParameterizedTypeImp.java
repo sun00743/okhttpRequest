@@ -1,4 +1,4 @@
-package com.mika.request.util;
+package com.mika.requester.util;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;

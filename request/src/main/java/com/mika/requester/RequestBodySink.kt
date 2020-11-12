@@ -1,4 +1,4 @@
-package com.mika.request
+package com.mika.requester
 
 import okhttp3.MediaType
 import okhttp3.RequestBody
@@ -27,7 +27,7 @@ open class RequestBodySink(protected val mBody: RequestBody, protected val mList
 
     override fun writeTo(sink: BufferedSink) {
         countingSink = CountingSink(sink)
-        val bufferedSink = Okio.buffer(countingSink)
+        val bufferedSink = countingSink.buffer()
         mBody.writeTo(bufferedSink)
         bufferedSink.close()
     }
