@@ -2,7 +2,7 @@ package com.mika.requester.request
 
 import com.mika.requester.Connector
 import com.mika.requester.RequestBodySink
-import com.mika.requester.listener.ResponseListener
+import com.mika.requester.listener.ResponseParser
 import okhttp3.*
 import okhttp3.Headers.Companion.headersOf
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -15,7 +15,7 @@ import java.net.URLConnection
  * Created by mika on 2018/6/24.
  * a request post string from only
  */
-abstract class PostFromRequester<T>(url: String, listener: ResponseListener<*>?) : Requester<T>(url, listener) {
+abstract class PostFromRequester<T>(url: String, parser: ResponseParser<T>) : Requester<T>(url, parser) {
 
     private lateinit var files: MutableMap<String, File>
 
@@ -145,11 +145,11 @@ abstract class PostFromRequester<T>(url: String, listener: ResponseListener<*>?)
 
                 override fun onRequestProgress(bytesWritten: Long, contentLength: Long) {
                     Connector.getPlatform().defaultCallbackExecutor().execute {
-                        listener?.inProgress(
-                                (bytesWritten / contentLength).toFloat(),
-                                contentLength,
-                                tag ?: Connector.REQUEST_NULL_TAG
-                        )
+//                        listener?.inProgress(
+//                                (bytesWritten / contentLength).toFloat(),
+//                                contentLength,
+//                                tag ?: Connector.REQUEST_NULL_TAG
+//                        )
                     }
                 }
 

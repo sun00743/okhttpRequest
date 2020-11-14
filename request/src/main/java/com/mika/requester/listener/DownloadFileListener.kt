@@ -7,14 +7,13 @@ import java.io.FileOutputStream
 /**
  * Created by mika on 2018/9/28.
  */
-abstract class DownloadFileListener: ResponseListener<File>() {
+class DownloadFileListener: ResponseParser<File> {
 
     private lateinit var fileDir: String
 
     private lateinit var fileName: String
 
-
-    override fun parseNetworkResponse(response: Response, tag: Any): File {
+    override fun parseNetworkResponse(response: Response): File {
         //todo mika
         val contentLength = response.body?.contentLength()
         response.body?.byteStream()?.let {

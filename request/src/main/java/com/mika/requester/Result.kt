@@ -9,6 +9,6 @@ sealed class Result<R>{
 
     data class Success<T>(val value: T) : Result<T>()
 
-    data class Error(val exception: Exception): Result<Nothing>()
+    data class Error(val exception: Exception, val code: Int? = -1): Result<Nothing>()
 
 }

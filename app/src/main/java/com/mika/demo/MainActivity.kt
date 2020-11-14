@@ -4,11 +4,16 @@ import android.Manifest
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.mika.requester.Result
-import com.mika.requester.request.GetStringRequester
+import com.mika.requester.listener.HttpParserFactory
+import com.mika.requester.request.GetRequester
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
 class MainActivity : AppCompatActivity() {
@@ -20,6 +25,10 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 1)
         }
+
+//        Connector.interceptError = { msg: String?, code: Int? ->
+//            false
+//        }
 
         button_request_get.setOnClickListener {
             requestBing()
@@ -55,17 +64,35 @@ class MainActivity : AppCompatActivity() {
 
     fun requestBing() {
         val url = "https://cn.bing.com/search"
-        GetStringRequester(url)
+
+        val startTime = System.currentTimeMillis()
+        val executeJob = GetRequester(url, HttpParserFactory.stringParser())
                 .addParam("q", "android")
-                .execute<String>(lifecycleScope) { result: Result<out String> ->
-                    when (result) {
-                        is  Result.Success-> {
-                            text_result.text = result.value
-                        }
-                        is  Result.Error-> {
-                            text_result.text = result.exception.message
-                        }
-                    }
+                .success {
+                    text_result.text = it
+                    val time = System.currentTimeMillis() - startTime
+                    Log.d("mika_run_time", time.toString())
                 }
+                .error { msg, code ->
+
+                }
+                .execute(lifecycleScope)
+//        executeJob.cancel()
+
+        //on cour scope
+        lifecycleScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                GetRequester(url, HttpParserFactory.stringParser())
+                        .addParam("q", "android")
+                        .executeOnScope()
+            }
+            when (result) {
+                is Result.Success -> text_result.text = result.value
+                is Result.Error -> {//show error ui}
+                }
+            }
+        }
+        //end
     }
+
 }

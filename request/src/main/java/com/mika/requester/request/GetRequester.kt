@@ -1,13 +1,13 @@
 package com.mika.requester.request
 
 import android.net.Uri
-import com.mika.requester.listener.ResponseListener
+import com.mika.requester.listener.ResponseParser
 import okhttp3.Request
 
 /**
  * Created by mika on 2018/6/9.
  */
-abstract class GetRequester<T>(url: String, listener: ResponseListener<*>?) : Requester<T>(url, listener) {
+class GetRequester<T>(url: String, parser: ResponseParser<T>) : Requester<T>(url, parser) {
 
     override fun buildOkHttpRequest(): Request {
         if (isParamsMapInit()) {
@@ -32,4 +32,5 @@ abstract class GetRequester<T>(url: String, listener: ResponseListener<*>?) : Re
     fun addParamMap(paramMap: HashMap<String, String>) {
         paramsMap = paramMap
     }
+
 }

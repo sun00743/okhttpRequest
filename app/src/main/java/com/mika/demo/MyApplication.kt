@@ -30,8 +30,8 @@ class MyApplication : Application() {
     private fun initOkHttpClient() {
         val okHttpClient = OkHttpClient.Builder()
                 //                .addInterceptor(new LoggerInterceptor("TAG"))
-                .connectTimeout(15000L, TimeUnit.MILLISECONDS)    //15s time out
-                .readTimeout(15000L, TimeUnit.MILLISECONDS)       //15s read out
+                .connectTimeout(10000L, TimeUnit.MILLISECONDS)    //15s time out
+                .readTimeout(5000L, TimeUnit.MILLISECONDS)       //15s read out
                 .retryOnConnectionFailure(false) //错误重连
                 .addInterceptor(HttpLoggingInterceptor()
                         .setLevel(HttpLoggingInterceptor.Level.BODY)

@@ -2,18 +2,18 @@ package com.mika.requester.request
 
 import com.mika.requester.Connector
 import com.mika.requester.Result
-import com.mika.requester.listener.ResponseListener
+import com.mika.requester.listener.ResponseParser
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.Response
 import java.util.concurrent.TimeUnit
 
 
 /**
  * Created by mika on 2018/6/3.
  */
-abstract class Requester<T>(protected val url: String, protected val listener: ResponseListener<*>?) {
+abstract class Requester<T>(protected val url: String, val parser: ResponseParser<T>) {
 
 
     private lateinit var mClientBuilder: OkHttpClient.Builder
@@ -26,6 +26,12 @@ abstract class Requester<T>(protected val url: String, protected val listener: R
     protected var useDefaultClient = true
     protected var tag: Any? = null
 
+    var errorBlock: ((msg: String, code: Int) -> Unit)? = null
+        private set
+
+    var successBlock: ((result: T) -> Unit)? = null
+        private set
+
     /**
      * http request builder
      */
@@ -35,7 +41,8 @@ abstract class Requester<T>(protected val url: String, protected val listener: R
         requestBuilder.url(url)
     }
 
-    fun <U> execute(coroutineScope: CoroutineScope, block: (result: Result<out T>) -> Unit) {
+/*
+    fun execute(coroutineScope: CoroutineScope, block: (result: Result<out T>) -> Unit) {
 
 //        val body = RequestBody.create(JSON, json)
 //        val request = Request.Builder()
@@ -48,11 +55,38 @@ abstract class Requester<T>(protected val url: String, protected val listener: R
         val client: OkHttpClient? = if (useDefaultClient) null else mClientBuilder.build()
         Connector.execute(client, this, coroutineScope, block)
     }
+*/
 
-    /**
-     * 解析Response
-     */
-    abstract fun parseNetworkResponse(response: Response): T
+    fun execute(coroutineScope: CoroutineScope): Job {
+        //todo buildRequestBody wrapRequestBody
+        val client: OkHttpClient? = if (useDefaultClient) null else mClientBuilder.build()
+//        return Connector.execute(client, this, successBlock, errorBlock, coroutineScope)
+        return Connector.execute(client, this, coroutineScope)
+    }
+
+/*
+    fun execute() {
+        //todo buildRequestBody wrapRequestBody
+        val client: OkHttpClient? = if (useDefaultClient) null else mClientBuilder.build()
+        return Connector.execute(client, this)
+    }
+*/
+
+    suspend fun executeOnScope(): Result<out T> {
+        //todo buildRequestBody wrapRequestBody
+        val client: OkHttpClient? = if (useDefaultClient) null else mClientBuilder.build()
+        return Connector.executeOnScope(client, this)
+    }
+
+    fun success(successBlock: ((result: T) -> Unit)): Requester<T> {
+        this.successBlock = successBlock
+        return this
+    }
+
+    fun error(errorBlock: ((msg: String, code: Int) -> Unit)): Requester<T> {
+        this.errorBlock = errorBlock
+        return this
+    }
 
     /**
      * requestBuilder build okHttp request
