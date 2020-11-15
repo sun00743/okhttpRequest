@@ -8,8 +8,11 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.mika.requester.Result
-import com.mika.requester.listener.HttpParserFactory
+import com.mika.requester.listener.DownloadFileParser
+import com.mika.requester.listener.GsonParser
+import com.mika.requester.listener.StringParser
 import com.mika.requester.request.GetRequester
+import com.mika.requester.util.ParameterizedTypeImp
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -35,6 +38,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         button_request_post.setOnClickListener {
+
+            val json = "[{\"name\":\"a\",\"age\":12,\"sex\":0},{\"name\":\"tom\",\"age\":18,\"sex\":0},{\"name\":\"marry\",\"age\":16,\"sex\":1}]"
+            val parseJson = GsonParser<ArrayList<Student>>(ArrayList::class.java, Student::class.java)
+            Log.d("mika_entity", parseJson.toString())
+
             val externalPath = Environment.getExternalStorageDirectory().absolutePath
             val file = File(externalPath, "v1.mp4")
             if (file.exists()) {
@@ -66,7 +74,9 @@ class MainActivity : AppCompatActivity() {
         val url = "https://cn.bing.com/search"
 
         val startTime = System.currentTimeMillis()
-        val executeJob = GetRequester(url, HttpParserFactory.stringParser())
+//        val parseJson = GsonParser<ArrayList<Student>>(ArrayList::class.java, Student::class.java)
+//        DownloadFileParser("fileDir", "fileName", )
+        val executeJob = GetRequester(url, StringParser())
                 .addParam("q", "android")
                 .success {
                     text_result.text = it
@@ -82,7 +92,7 @@ class MainActivity : AppCompatActivity() {
         //on cour scope
         lifecycleScope.launch {
             val result = withContext(Dispatchers.IO) {
-                GetRequester(url, HttpParserFactory.stringParser())
+                GetRequester(url, StringParser())
                         .addParam("q", "android")
                         .executeOnScope()
             }

@@ -1,6 +1,7 @@
 package com.mika.requester
 
 import android.util.Log
+import com.mika.requester.listener.DownloadFileParser
 import com.mika.requester.listener.ResponseParser
 import com.mika.requester.request.Requester
 import kotlinx.coroutines.*
@@ -100,7 +101,13 @@ object Connector {
                 try {
                     val response = (client ?: mDefaultClient).newCall(request).execute()
                     if (response.isSuccessful) {
-                        val value = requester.parser.parseNetworkResponse(response)
+                        val parser = requester.parser
+                        //down load file
+                        if (parser is DownloadFileParser) {
+                            parser.coroutineScope = this@launch
+                            parser.progressBlock = requester.progressBlock
+                        }
+                        val value = parser.parseNetworkResponse(response)
                         response.body?.close()
                         Result.Success(value)
                     } else {

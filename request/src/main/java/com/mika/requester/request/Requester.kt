@@ -32,6 +32,9 @@ abstract class Requester<T>(protected val url: String, val parser: ResponseParse
     var successBlock: ((result: T) -> Unit)? = null
         private set
 
+    var progressBlock: ((progress: Float, length: Long) -> Unit)? = null
+        private set
+
     /**
      * http request builder
      */

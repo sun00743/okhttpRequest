@@ -13,7 +13,6 @@ import okhttp3.Response
  */
 class PostForJsonRequest<T>(url: String, val content: String, listener: ResponseParser<T>) : Requester<T>(url, listener) {
 
-    var resultCls: Class<T>? = null
 
     override fun buildOkHttpRequest(): Request {
         val requestBody = content.toRequestBody("application/json;charset=utf-8".toMediaTypeOrNull())
@@ -27,11 +26,5 @@ class PostForJsonRequest<T>(url: String, val content: String, listener: Response
 //
 //        return GSON.value.fromJson<T>(stringBody, resultCls)
 //    }
-
-    companion object {
-        val GSON = lazy {
-            GsonBuilder().create()
-        }
-    }
 
 }
