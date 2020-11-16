@@ -37,7 +37,7 @@ abstract class Requester<T>(protected val url: String, val parser: ResponseParse
     var progressBlock: ((progress: Float, length: Long) -> Unit)? = null
         private set
 
-    var progressDataObserve: Observer<DownloadFileParser.ProgressData>? = null
+//    var progressDataObserve: Observer<DownloadFileParser.ProgressData>? = null
 
     /**
      * http request builder
@@ -97,9 +97,9 @@ abstract class Requester<T>(protected val url: String, val parser: ResponseParse
 
     fun inProgress(progressBlock: ((progress: Float, length: Long) -> Unit)): Requester<T> {
         this.progressBlock = progressBlock
-        progressDataObserve = Observer {
-            this.progressBlock?.invoke(it.progress, it.length)
-        }
+//        progressDataObserve = Observer {
+//            this.progressBlock?.invoke(it.progress, it.length)
+//        }
         return this
     }
 
