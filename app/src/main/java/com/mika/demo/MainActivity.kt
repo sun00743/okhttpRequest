@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import kotlin.math.log
 
 class MainActivity : AppCompatActivity() {
 
@@ -39,13 +40,41 @@ class MainActivity : AppCompatActivity() {
 
         button_request_post.setOnClickListener {
 
-            val json = "[{\"name\":\"a\",\"age\":12,\"sex\":0},{\"name\":\"tom\",\"age\":18,\"sex\":0},{\"name\":\"marry\",\"age\":16,\"sex\":1}]"
-            val parseJson = GsonParser<ArrayList<Student>>(ArrayList::class.java, Student::class.java)
-            Log.d("mika_entity", parseJson.toString())
+            val file = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+            val tFile = File(file, "img.jpg")
 
-            val externalPath = Environment.getExternalStorageDirectory().absolutePath
-            val file = File(externalPath, "v1.mp4")
-            if (file.exists()) {
+            Log.d("mika_file", tFile.length().toString())
+
+            val fileParser = DownloadFileParser(file?.absolutePath!!, "image")
+//            fileParser.file = tFile
+            val executeJob = GetRequester("https://cn.bing.com/search", fileParser)
+                    .addParam("q", "android")
+                    .inProgress { fl: Float, l: Long ->
+                        Log.d("mika_file", "thread: ${Thread.currentThread().name}  f: $fl , total: $l")
+                    }
+                    .success {
+                        Log.d("mika_file", it.length().toString())
+//                        text_result.text = it
+//                        val time = System.currentTimeMillis() - startTime
+//                        Log.d("mika_run_time", time.toString())
+                    }
+                    .error { msg, code ->
+                        Log.d("mika_file", "error: \n $msg")
+                    }
+                    .execute(lifecycleScope)
+
+
+//            DownloadFileParser().testParseFile()
+
+//            val json = "[{\"name\":\"a\",\"age\":12,\"sex\":0},{\"name\":\"tom\",\"age\":18,\"sex\":0},{\"name\":\"marry\",\"age\":16,\"sex\":1}]"
+//            val parseJson = GsonParser<ArrayList<Student>>(ArrayList::class.java, Student::class.java)
+//            Log.d("mika_entity", parseJson.toString())
+
+//            val externalPath = Environment.getExternalStorageDirectory().absolutePath
+
+
+//            val file = File(externalPath, "v1.mp4")
+//            if (file.exists()) {
 /*
                 val postFromRequester = PostForJsonRequest("https://cn.bing.com", object : StringListener() {
 
@@ -65,7 +94,7 @@ class MainActivity : AppCompatActivity() {
                 postFromRequester.addFile(file)
                 postFromRequester.execute()
 */
-            }
+//            }
 
         }
     }
@@ -86,7 +115,7 @@ class MainActivity : AppCompatActivity() {
                 .error { msg, code ->
 
                 }
-                .execute(lifecycleScope)
+//                .execute(lifecycleScope)
 //        executeJob.cancel()
 
         //on cour scope

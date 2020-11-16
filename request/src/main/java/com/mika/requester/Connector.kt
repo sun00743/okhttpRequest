@@ -6,11 +6,14 @@ import com.mika.requester.listener.ResponseParser
 import com.mika.requester.request.Requester
 import kotlinx.coroutines.*
 import okhttp3.*
+import java.io.File
 import java.io.IOException
 import java.lang.Runnable
 import java.util.*
 import kotlin.collections.HashMap
+import kotlin.coroutines.coroutineContext
 import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 /**
  * Created by mika on 2018/5/28.
@@ -118,7 +121,7 @@ object Connector {
                 }
             }
             when (result) {
-                is Result.Success -> requester.successBlock?.invoke(result.value)
+                is Result.Success -> requester.successBlock?.invoke(result.value as T)
                 is Result.Error -> {
                     if (interceptError?.invoke(result.exception.message, result.code) == true) {
                         return@launch
@@ -135,8 +138,22 @@ object Connector {
         val result = try {
             val response = (client ?: mDefaultClient).newCall(request).execute()
             if (response.isSuccessful) {
-                val value = requester.parser.parseNetworkResponse(response)
+                val parser = requester.parser
+
+                //down load file
+                if (parser is DownloadFileParser) {
+//                    parser.progressData?.observeForever(requester.progressDataObserve!!)
+//                    parser.coroutineScope = this
+//                    parser.progressBlock = requester.progressBlock
+                }
+                //parse response
+                val value = parser.parseNetworkResponse(response)
                 response.body?.close()
+
+//                if (parser is DownloadFileParser) {
+//                    parser.progressData?.removeObserver(requester.progressDataObserve!!)
+//                    parser.progressData = null
+//                }
                 Result.Success(value)
             } else {
                 Result.Error(Exception("http response error, msg: ${response.message}"), response.code)

@@ -1,7 +1,9 @@
 package com.mika.requester.request
 
+import androidx.lifecycle.Observer
 import com.mika.requester.Connector
 import com.mika.requester.Result
+import com.mika.requester.listener.DownloadFileParser
 import com.mika.requester.listener.ResponseParser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -34,6 +36,8 @@ abstract class Requester<T>(protected val url: String, val parser: ResponseParse
 
     var progressBlock: ((progress: Float, length: Long) -> Unit)? = null
         private set
+
+    var progressDataObserve: Observer<DownloadFileParser.ProgressData>? = null
 
     /**
      * http request builder
@@ -90,6 +94,15 @@ abstract class Requester<T>(protected val url: String, val parser: ResponseParse
         this.errorBlock = errorBlock
         return this
     }
+
+    fun inProgress(progressBlock: ((progress: Float, length: Long) -> Unit)): Requester<T> {
+        this.progressBlock = progressBlock
+        progressDataObserve = Observer {
+            this.progressBlock?.invoke(it.progress, it.length)
+        }
+        return this
+    }
+
 
     /**
      * requestBuilder build okHttp request
