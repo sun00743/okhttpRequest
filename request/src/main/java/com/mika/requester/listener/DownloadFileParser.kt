@@ -1,29 +1,21 @@
 package com.mika.requester.listener
 
-import android.app.Application
-import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import com.mika.requester.Connector
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import okhttp3.Response
 import okio.buffer
 import okio.sink
 import okio.source
 import java.io.File
-import java.io.FileInputStream
 
 /**
  * Created by mika on 2018/9/28.
  */
 class DownloadFileParser(var fileDir: String, var fileName: String) : ResponseParser<File> {
 
-//    var progressData: MutableLiveData<ProgressData>? = null
+    var progressListener: ((Float, Long) -> Unit)? = null
 
-    var coroutineScope: CoroutineScope? = null
-
-    internal var progressBlock: ((progress: Float, length: Long) -> Unit)? = null
+//    fun setProgressListener(progressListener: (Float, Long) -> Unit) {
+//        this.progressListener = progressListener
+//    }
 
     override fun parseNetworkResponse(response: Response): File {
         response.body?.use { body ->
@@ -57,11 +49,7 @@ class DownloadFileParser(var fileDir: String, var fileName: String) : ResponsePa
                     val currentTimeMillis = System.currentTimeMillis()
                     if (currentTimeMillis - postTime >= 300 || progress == 1.0f) {
                         postTime = currentTimeMillis
-
-//                        progressData?.value = ProgressData(progress, length)
-                        coroutineScope?.launch {
-                            progressBlock?.invoke(progress, length)
-                        }
+                        progressListener?.invoke(progress, length)
                     }
 //                    Connector.getPlatform().execute(Runnable {
 //                    })
@@ -70,13 +58,14 @@ class DownloadFileParser(var fileDir: String, var fileName: String) : ResponsePa
             } finally {
                 isb.close()
                 osb.close()
-                coroutineScope = null
+                progressListener = null
             }
             return result
         }
 
         throw Exception("parse file failed")
     }
+
 
 /*
     private fun testParseFile(): File {
@@ -122,6 +111,5 @@ class DownloadFileParser(var fileDir: String, var fileName: String) : ResponsePa
     }
 */
 
-//    data class ProgressData(var progress: Float, var length: Long)
 
 }

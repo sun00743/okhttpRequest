@@ -123,6 +123,12 @@ class MainActivity : AppCompatActivity() {
             val result = withContext(Dispatchers.IO) {
                 GetRequester(url, StringParser())
                         .addParam("q", "android")
+                        .inProgress { progress, length ->
+                            //in IO thread, need post value to main
+                            launch(Dispatchers.Main) {
+                                text_result.text = progress.toString()
+                            }
+                        }
                         .executeOnScope()
             }
             when (result) {

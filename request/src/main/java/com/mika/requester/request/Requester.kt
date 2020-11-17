@@ -37,7 +37,6 @@ abstract class Requester<T>(protected val url: String, val parser: ResponseParse
     var progressBlock: ((progress: Float, length: Long) -> Unit)? = null
         private set
 
-//    var progressDataObserve: Observer<DownloadFileParser.ProgressData>? = null
 
     /**
      * http request builder
@@ -71,14 +70,6 @@ abstract class Requester<T>(protected val url: String, val parser: ResponseParse
         return Connector.execute(client, this, coroutineScope)
     }
 
-/*
-    fun execute() {
-        //todo buildRequestBody wrapRequestBody
-        val client: OkHttpClient? = if (useDefaultClient) null else mClientBuilder.build()
-        return Connector.execute(client, this)
-    }
-*/
-
     suspend fun executeOnScope(): Result<out T> {
         //todo buildRequestBody wrapRequestBody
         val client: OkHttpClient? = if (useDefaultClient) null else mClientBuilder.build()
@@ -95,11 +86,14 @@ abstract class Requester<T>(protected val url: String, val parser: ResponseParse
         return this
     }
 
+    /**
+     * load file progress.
+     *
+     * when use executeOnScope, this block will running in launch Thread, so may be not in main Thread,
+     * you may post value to the main to show.
+     */
     fun inProgress(progressBlock: ((progress: Float, length: Long) -> Unit)): Requester<T> {
         this.progressBlock = progressBlock
-//        progressDataObserve = Observer {
-//            this.progressBlock?.invoke(it.progress, it.length)
-//        }
         return this
     }
 
