@@ -28,7 +28,9 @@ object Connector {
     private lateinit var mCommonHeaders: HashMap<String, String>
 
     /**
-     * error返回拦截器
+     * error返回拦截器，拦截以后[Requester.error]不会回调
+     *
+     * 哪个[Job]执行execute方法，便在在它的[CoroutineDispatcher]中执行拦截方法
      */
     var interceptError: ((errorMsg: String?, errorCode: Int?) -> Boolean)? = null
 
@@ -65,7 +67,7 @@ object Connector {
 //        val request = requester.buildOkHttpRequest()
         return coroutineScope.launch {
             val result = withContext(Dispatchers.IO) {
-                executeOnScope(client, requester, this@launch)
+                executeOnScope(client, requester, this@launch, false)
             }
             when (result) {
                 is Result.Success -> requester.successBlock?.invoke(result.value)
@@ -79,8 +81,8 @@ object Connector {
         }
     }
 
-    suspend fun <T> executeOnScope(client: OkHttpClient?, requester: Requester<T>, progressScope: CoroutineScope? = null)
-            = suspendCancellableCoroutine<Result<out T>> { uCont ->
+    suspend fun <T> executeOnScope(client: OkHttpClient?, requester: Requester<T>, progressScope: CoroutineScope? = null,
+                                   needIntercept: Boolean? = true) = suspendCancellableCoroutine<Result<out T>> { uCont ->
         val request = requester.buildOkHttpRequest()
         val useClient = client ?: mDefaultClient
         val result = try {
@@ -89,14 +91,11 @@ object Connector {
                 uCont.invokeOnCancellation {
                     //cancel okHttp call
                     cancel()
-                    Log.d("mika_cancel", "call cancel start")
-//                    requester.errorBlock?.invoke()
                 }
                 execute().use { response ->
-
-                    Log.d("mika_cancel", "response: ${response.body?.string()}")
                     if (isCanceled()) {
-                        Log.d("mika_cancel", "response cancel: ${response.body?.string()}")
+                        val e = Exception("http request cancel, msg: ${response.message}")
+                        return@run Result.Error(e, response.code)
                     }
                     if (response.isSuccessful) {
                         val parser = requester.parser
@@ -112,7 +111,8 @@ object Connector {
                         val value = parser.parseNetworkResponse(response)
                         Result.Success(value)
                     } else {
-                        Result.Error(Exception("http response error, msg: ${response.message}"), response.code)
+                        val e = Exception("http response error, msg: ${response.message}")
+                        Result.Error(e, response.code)
                     }
                 }
             }
@@ -120,6 +120,13 @@ object Connector {
             Result.Error(e)
         }
 
+        if (needIntercept != false && result is Result.Error) {
+            MainScope().launch {
+                if (interceptError?.invoke(result.exception.message, result.code) == true) {
+                    uCont.cancel()
+                }
+            }
+        }
         uCont.resume(result)
     }
 

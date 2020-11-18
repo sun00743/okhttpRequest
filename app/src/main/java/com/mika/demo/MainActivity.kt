@@ -72,9 +72,9 @@ class MainActivity : AppCompatActivity() {
                     Log.d("mika_run_time", time.toString())
                 }
                 .execute(lifecycleScope)
-        lifecycleScope.launch(Dispatchers.IO) {
-            delay(75)
-            Log.d("mika_cancel", "job cancel invoke")
+        lifecycleScope.launch() {
+            delay(500)
+            Log.d("mika_cancel", "${Thread.currentThread().name}, job cancel invoke")
             job.cancel(CancellationException("mika cancel"))
         }
     }
