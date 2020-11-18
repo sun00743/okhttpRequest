@@ -1,4 +1,4 @@
-package com.mika.request;
+package com.mika.requester;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

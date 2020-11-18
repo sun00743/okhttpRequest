@@ -1,4 +1,4 @@
-package com.mika.request;
+package com.mika.requester;
 
 import org.junit.Test;
 
