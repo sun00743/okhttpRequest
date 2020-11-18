@@ -13,15 +13,10 @@ class DownloadFileParser(var fileDir: String, var fileName: String) : ResponsePa
 
     var progressListener: ((Float, Long) -> Unit)? = null
 
-//    fun setProgressListener(progressListener: (Float, Long) -> Unit) {
-//        this.progressListener = progressListener
-//    }
-
     override fun parseNetworkResponse(response: Response): File {
-        response.body?.use { body ->
-
-            val length = body.contentLength()
-            val inputStream = body.byteStream()
+        response.body?.apply {
+            val length = contentLength()
+            val inputStream = byteStream()
             val buf = ByteArray(2048)
             var sum = 0L
             var len = 0

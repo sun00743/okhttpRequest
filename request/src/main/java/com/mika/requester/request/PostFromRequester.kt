@@ -17,6 +17,8 @@ import java.net.URLConnection
  */
 abstract class PostFromRequester<T>(url: String, parser: ResponseParser<T>) : Requester<T>(url, parser) {
 
+    private var inPostProgressBlock: ((progress: Float, contentLength: Long) -> Unit)? = null
+
     private lateinit var files: MutableMap<String, File>
 
     override fun buildOkHttpRequest(): Request {
@@ -40,6 +42,11 @@ abstract class PostFromRequester<T>(url: String, parser: ResponseParser<T>) : Re
             files = mutableMapOf()
         }
         files[key] = file
+    }
+
+    fun inPostProgress(block: (progress: Float, contentLength: Long) -> Unit): PostFromRequester<T> {
+        this.inPostProgressBlock = block
+        return this
     }
 
     private fun isFilesMapInitialized(): Boolean {
@@ -142,15 +149,19 @@ abstract class PostFromRequester<T>(url: String, parser: ResponseParser<T>) : Re
 
         private fun wrapBody(requestBody: RequestBody): RequestBody {
             return RequestBodySink(requestBody, object : RequestBodySink.OnProgressListener {
-
                 override fun onRequestProgress(bytesWritten: Long, contentLength: Long) {
+                    //todo
                     Connector.getPlatform().defaultCallbackExecutor().execute {
+                        val progress = (bytesWritten / contentLength).toFloat()
+                        inPostProgressBlock?.invoke(progress, contentLength)
+                    }
+//                    Connector.getPlatform().defaultCallbackExecutor().execute {
 //                        listener?.inProgress(
 //                                (bytesWritten / contentLength).toFloat(),
 //                                contentLength,
 //                                tag ?: Connector.REQUEST_NULL_TAG
 //                        )
-                    }
+//                    }
                 }
 
             })
@@ -159,3 +170,4 @@ abstract class PostFromRequester<T>(url: String, parser: ResponseParser<T>) : Re
     }
 
 }
+

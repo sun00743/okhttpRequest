@@ -1,9 +1,7 @@
 package com.mika.requester.request
 
-import androidx.lifecycle.Observer
 import com.mika.requester.Connector
 import com.mika.requester.Result
-import com.mika.requester.listener.DownloadFileParser
 import com.mika.requester.listener.ResponseParser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job

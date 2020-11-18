@@ -29,7 +29,6 @@ class GsonParser<T>(var rawType: Type? = null, var typeOfRaw: Type? = null) : Re
             object : TypeToken<T>() {}.type
         }
         return GSON.value.fromJson<T>(stringBody, type)
-//        return GSON.value.fromJson<T>(stringBody, resultCls)
     }
 
 }

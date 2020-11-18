@@ -1,5 +1,6 @@
 package com.mika.requester
 
+import android.util.Log
 import com.mika.requester.listener.DownloadFileParser
 import com.mika.requester.request.Requester
 import kotlinx.coroutines.*
@@ -61,27 +62,10 @@ object Connector {
     }
 
     fun <T> execute(client: OkHttpClient?, requester: Requester<T>, coroutineScope: CoroutineScope): Job {
-        val request = requester.buildOkHttpRequest()
+//        val request = requester.buildOkHttpRequest()
         return coroutineScope.launch {
             val result = withContext(Dispatchers.IO) {
-                try {
-                    val response = (client ?: mDefaultClient).newCall(request).execute()
-                    if (response.isSuccessful) {
-                        val parser = requester.parser
-                        //down load file
-                        if (parser is DownloadFileParser) {
-                            postInProgress(parser, this@launch, requester.progressBlock)
-                        }
-
-                        val value = parser.parseNetworkResponse(response)
-                        response.body?.close()
-                        Result.Success(value)
-                    } else {
-                        Result.Error(Exception("http response error, msg: ${response.message}"), response.code)
-                    }
-                } catch (e: Exception) {
-                    Result.Error(e)
-                }
+                executeOnScope(client, requester, this@launch)
             }
             when (result) {
                 is Result.Success -> requester.successBlock?.invoke(result.value)
@@ -95,6 +79,50 @@ object Connector {
         }
     }
 
+    suspend fun <T> executeOnScope(client: OkHttpClient?, requester: Requester<T>, progressScope: CoroutineScope? = null)
+            = suspendCancellableCoroutine<Result<out T>> { uCont ->
+        val request = requester.buildOkHttpRequest()
+        val useClient = client ?: mDefaultClient
+        val result = try {
+            useClient.newCall(request).run {
+                //job cancel listener
+                uCont.invokeOnCancellation {
+                    //cancel okHttp call
+                    cancel()
+                    Log.d("mika_cancel", "call cancel start")
+//                    requester.errorBlock?.invoke()
+                }
+                execute().use { response ->
+
+                    Log.d("mika_cancel", "response: ${response.body?.string()}")
+                    if (isCanceled()) {
+                        Log.d("mika_cancel", "response cancel: ${response.body?.string()}")
+                    }
+                    if (response.isSuccessful) {
+                        val parser = requester.parser
+                        //set post down load file progress
+                        if (parser is DownloadFileParser) {
+                            if (progressScope != null) {
+                                postInProgress(parser, progressScope, requester.progressBlock)
+                            } else {
+                                parser.progressListener = requester.progressBlock
+                            }
+                        }
+                        //parse response
+                        val value = parser.parseNetworkResponse(response)
+                        Result.Success(value)
+                    } else {
+                        Result.Error(Exception("http response error, msg: ${response.message}"), response.code)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+
+        uCont.resume(result)
+    }
+
     private fun postInProgress(parser: DownloadFileParser, coroutineScope: CoroutineScope,
                                progressBlock: ((progress: Float, length: Long) -> Unit)?) {
         parser.progressListener = { progress: Float, length: Long ->
@@ -102,33 +130,6 @@ object Connector {
                 progressBlock?.invoke(progress, length)
             }
         }
-    }
-
-    suspend fun <T> executeOnScope(client: OkHttpClient?, requester: Requester<T>) = suspendCancellableCoroutine<Result<out T>> {
-        val request = requester.buildOkHttpRequest()
-
-        val result = try {
-            val response = (client ?: mDefaultClient).newCall(request).execute()
-            if (response.isSuccessful) {
-                val parser = requester.parser
-
-                //down load file
-                if (parser is DownloadFileParser) {
-                    parser.progressListener = requester.progressBlock
-                }
-
-                //parse response
-                val value = parser.parseNetworkResponse(response)
-                response.body?.close()
-                Result.Success(value)
-            } else {
-                Result.Error(Exception("http response error, msg: ${response.message}"), response.code)
-            }
-        } catch (e: Exception) {
-            Result.Error(e)
-        }
-
-        it.resume(result)
     }
 
 
