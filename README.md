@@ -4,7 +4,7 @@ okhttp with coroutines.
 ## 说明
 在build.gradle中引入 
 ```
-implementation 'com.github.sun00743.okhttpRequest:request:1.0.0'
+implementation 'com.github.sun00743.okhttpRequest:request:1.0.1'
 ```
 
 使用kotlin提供的协程库以及okhttp，简单封装了一下，让协程（Dispatchers.IO）来负责请求网络及线程转换。
