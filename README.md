@@ -7,7 +7,7 @@ okhttp with coroutines.
 implementation 'com.github.sun00743.okhttpRequest:request:1.0.0'
 ```
 
-使用kotlin提供的协程库以及okhttp，简单封装了一下，让协程（Dispatchers.IO）来负责请求网络及线程转换。
+使用kotlin提供的协程库以及okhttp，简单封装了一下，让协程来负责请求网络（Dispatchers.IO）及线程转换。
 
 使用gson来提供json format。
 
@@ -33,4 +33,4 @@ GetRequester(url, StringParser())
                 .execute(lifecycleScope)
 ```
 
-待续...
+//...
